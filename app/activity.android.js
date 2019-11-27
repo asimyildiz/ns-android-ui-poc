@@ -38,6 +38,10 @@ androidx.appcompat.app.AppCompatActivity.extend("org.beIN.TVActivity", {
     onActivityResult: function (requestCode, resultCode, data) {
         this._callbacks.onActivityResult(this, requestCode, resultCode, data, _super.prototype.onActivityResult);
     },
+    /**
+     * listens dpad key clicks
+     * @param {Object} event 
+     */
     dispatchKeyEvent: function(event) {
         // let's highlight the element that currently has the focus
         const tnsButton = this.getCurrentFocus();

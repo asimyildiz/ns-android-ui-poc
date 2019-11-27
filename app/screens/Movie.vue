@@ -1,5 +1,5 @@
 <template>
-    <Page @loaded="onLoaded">
+    <Page @loaded="onLoaded" @navigatedTo="onNavigatedTo">
         <!-- Screen elements that need to be within the overscan safe area go here -->
         <GridLayout rows="*" columns="2*, 5*">
             <Categories col="0" ref="categoryMenu" id="categoryMenu" :categories="categories" :isProcessing="isCategoryLoading" />
@@ -30,6 +30,10 @@
             }
         },
         computed: {
+            /**
+             * compute and return category list from store
+             * @returns {Array}
+             */
             categories() {
                 const categories = this.$store.getters.categories;
                 if (categories) {
@@ -37,9 +41,17 @@
                 }
                 return [];
             },
+            /**
+             * compute and return if categories are still loading from service
+             * @returns {Boolean}
+             */
             isCategoryLoading() {
                 return this.$store.getters.isCategoryLoading;
             },
+            /**
+             * compute and return content list from store
+             * @returns {Array}
+             */
             contents() {
                 const contents = this.$store.getters.contents;
                 if (contents) {
@@ -47,9 +59,17 @@
                 }
                 return [];
             },
+            /**
+             * compute and return if contents are still loading from service
+             * @returns {Boolean}
+             */
             isContentsLoading() {
                 return this.$store.getters.isContentsLoading;
             },
+            /**
+             * compute and return active category id
+             * @returns {Number}
+             */
             currentCategoryId() {
                 return this.$store.getters.categoryId;
             }
@@ -58,6 +78,12 @@
             /*******************************************************************************************************
             ******************************** ASSET RELATED METHODS *************************************************
             ********************************************************************************************************/
+           /**
+            * get trailer url for a content
+            * @param {Object} currentContent
+            * @param {Object} contentDetailResult
+            * @returns {Promise<*>}
+            */
             getTrailerUrl(currentContent, contentDetailResult) {
                 const assetId = contentDetailResult.previewsSourceUrlList && contentDetailResult.previewsSourceUrlList[0];
                 if (assetId) {
@@ -65,9 +91,19 @@
                 }
                 return Promise.resolve(null);
             },
+            /**
+             * parse and get content id from a string
+             * @param {String} id
+             * @returns {String}
+             */
             getContentId(id) {
                 return id.substr(0, id.lastIndexOf('_'));
             },
+            /**
+             * find a content from contents
+             * @param {String} contentId
+             * @returns {Object}
+             */
             findContent(contentId) {
                 if (this.contents.length > 0) {
                     return this.contents.find((content) => {
@@ -76,6 +112,11 @@
                 }
                 return {};
             },
+            /**
+             * get trailer url for a content by id
+             * @param {String} id
+             * @returns {Promise<*>}
+             */
             getTrailerUrlContent(id) {
                 const currentContent = this.findContent(this.getContentId(id));
                 if (currentContent) {
@@ -90,14 +131,26 @@
             /*******************************************************************************************************
              *********************************** SCREEN METHODS ****************************************************
              ********************************************************************************************************/
+            /**
+             * register to listen events such as 
+             * loadCategory - event when a category contents are loaded
+             * contentFocusChange - event when a new content is selected by dpad
+             * movieLoad - event when a movie is loaded
+             */
             listenEvents() {
                 this.$root.$on('loadCategory', this.loadCategory.bind(this));
                 this.$root.$on('onContentFocusChange', this.onContentFocusChange.bind(this));
                 this.$root.$on('onMovieLoad', this.onMovieLoad.bind(this))
             },
+            /**
+             * set active screen name value to store
+             */
             setDefaultFocus() {
                 this.$store.commit('SET_SCREEN', this.$options.name);
             },
+            /**
+             * set access keys for service from config
+             */
             setAccessKeys() {
                 // get access keys from elsewhere if there is no
                 // or do not set access keys from here, instead add a method to fetch access keys into vodService
@@ -114,17 +167,39 @@
                     });
                 }
             },
+            /**
+             * fetch categories from store if categories are previously loaded to store
+             * if not fetch categories from service
+             * remove some categories which has no content inside
+             * @returns {Promise<*>}
+             */
             fetchData() {
                 const categories = this.$store.getters.categories;
-                if (!categories || categories.length === 0) {
+                if (!categories) {
                     this.$store.commit('SET_CATEGORY_IS_LOADING', true);
                     return beINFW.vodService.getClassificationTree(true)
                             .then((categories) => {
-                                this.$store.commit('SET_CATEGORIES', categories);
+                                // we need to have at least a category 
+                                if (categories && categories.defaultCategories) {
+                                    // because category tree structure is updated on services
+                                    // just remove the parent categories which has no content inside manually
+                                    categories.defaultCategories = categories.defaultCategories.filter((category) => {
+                                        return ["FILM", "BOX_OFFICE", "SPOR", "COCUK", "YERLI_DIZI"].indexOf(category.classificationTermName) == -1;
+                                    });                                                
+                                    this.$store.commit('SET_CATEGORIES', categories);
+                                    this.loadCategory(categories.defaultCategories[0].classificationTermName);
+                                }                                
                             });
+                }else {
+                    this.loadCategory(categories.defaultCategories[0].classificationTermName);
                 }
                 return Promise.resolve();
             },
+            /**
+             * fetch contents for a category
+             * @param {String} categoryId
+             * @returns {Promise<*>}
+             */
             loadCategory(categoryId) {
                 this.$store.commit('SET_CONTENTS_ARE_LOADING', true);
                 beINFW.vodService.getContentsInClassification(categoryId, 0, 50, 'DESC')
@@ -134,6 +209,10 @@
                         });
                 return Promise.resolve([]);
             },
+            /**
+             * fetch trailer url for a content when focus is changed using dpad and set playUrl
+             * @param {String} contentId
+             */
             onContentFocusChange(contentId) {
                 this.getTrailerUrlContent(contentId)
                         .then((url) => {
@@ -142,6 +221,10 @@
                             }
                         });
             },
+            /**
+             * navigate to content detail page when a content is clicked
+             * @param {String} contentId
+             */
             onMovieLoad(contentId) {
                 const content = this.findContent(this.getContentId(contentId));
                 this.$root.$emit('navigate', 'details', {
@@ -149,11 +232,24 @@
                     content
                 });
             },
+            /**
+             * page onload event
+             * hide action bar when page is loaded
+             * set IS_NAVIGATING to false when page is loaded
+             * @param {Object} event
+             */
             onLoaded(event) {
                 console.info('ON LOAD FINISHED - Movie');
                 const page = event.object;
                 page.actionBarHidden = true;
-
+            },
+            /**
+             * page on navigated to event
+             * if page is first opened then set default focus and fetch data
+             * if page is loaded from hardware back key press do nothing
+             * @param {Object} event
+             */
+            onNavigatedTo(event) {
                 if (!event.isBackNavigation) {
                     this.listenEvents();
                     setTimeout(() => {

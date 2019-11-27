@@ -30,6 +30,11 @@
             }
         },
         methods: {
+            /**
+             * parse current category name and index from categoryId
+             * @param {String} categoryId
+             * @returns {Object} 
+             */
             getCategoryPartsFromId(categoryId) {
                 const lastIndex = categoryId.lastIndexOf('_');
                 const currentCategoryName = categoryId.substr(0, lastIndex);
@@ -39,41 +44,40 @@
                     currentIndex
                 }
             },
+            /**
+             * create a category id dynamically for a content using it's name and index
+             * @param {Object} category
+             * @param {Number} index
+             * @returns {String}
+             */
             createCategoryId(category, index) {
                 return `${category.classificationTermName}_${index}`;
             },
+            /**
+             * navigate to search screen when search button is clicked
+             * @param {Object} event
+             */
             loadSearch(event) {
                 this.$root.$emit('navigate', event.object.id);
             },
+            /**
+             * navigate to content list screen for a category on category click
+             * @param {Object} event
+             */
             loadCategory(event) {
                 const categoryId = event.object.id;
                 const category = this.getCategoryPartsFromId(categoryId);
-                console.log(`dispatch-loadCategory-${category.currentCategoryName}`);
                 this.$root.$emit('loadCategory', category.currentCategoryName);
             },
+            /**
+             * for android, save loaded item into jsview to handle focus inside Activity class
+             * @param {Object} event
+             */
             loaded(event) {
                 let view = event.object;
                 if (this.$isAndroid) {
                     view.android['jsview'] = event.object;
-                }
-
-                const categoryId = view.id;
-                if (categoryId !== 'search') {
-                    const category = this.getCategoryPartsFromId(categoryId);
-                    if (category.currentIndex === 0) {
-                        // fire to load category contents
-                        console.log(`dispatch-loadCategory-${category.currentCategoryName}`);
-                        this.$root.$emit('loadCategory', category.currentCategoryName);
-
-                        view.addPseudoClass('focused');
-                        if (this.$isAndroid) {
-                            view.android.setFocusable(true);
-                            view.android.setFocusableInTouchMode(true);
-                            view.android.requestFocus();
-                        }
-                    }
-                }
-
+                }                
             }
         }
     }
@@ -100,12 +104,7 @@
         text-transform: none;
         text-align: left;
         color: #EEEEEE;
-        background-color: transparent;
-        border-color: transparent;
-        border-width: 1px;
-    }
-
-    .categoryMenu Button:focused {
-        color: #950B02;
+        background-color: #020D27;
+        border : 0 solid black;
     }
 </style>

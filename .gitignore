@@ -1,0 +1,15 @@
+# JetBrains project files
+.idea
+
+# NPM
+node_modules
+
+# NativeScript application
+hooks
+platforms
+
+# beIN FW SDK
+sdk
+
+# package lock
+package-lock.json

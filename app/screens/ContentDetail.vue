@@ -1,5 +1,5 @@
 <template>
-    <Page @loaded="onLoaded">
+    <Page @loaded="onLoaded" @navigatedTo="onNavigatedTo">
         <AbsoluteLayout top="0" left="0">
             <AbsoluteLayout top="0" left="0" height="300" width="100%">
                 <Image :src="content.poster_big" stretch="aspectFit" />
@@ -8,7 +8,7 @@
                 <AbsoluteLayout top="0" left="250">
                     <GridLayout rows="50" columns="100, *, *">
                         <StackLayout class="buttons" orientation="horizontal" verticalAlignment="center" row="0" col="2">
-                            <Button ref="contentDetail" id="buy" @tap="buyContent" @loaded="loaded" :class="isFocused('contentDetail')">{{ $t('GENERIC_TEXT_VALUE_BUY') }}</Button>
+                            <Button ref="contentDetail" id="buy" @tap="buyContent" @loaded="loaded">{{ $t('GENERIC_TEXT_VALUE_BUY') }}</Button>
                             <Button ref="rent" id="rent" @tap="rentContent" @loaded="loaded">{{ $t('GENERIC_TEXT_VALUE_RENT') }}</Button>
                             <Button ref="watch" id="watch" @tap="watchContent" @loaded="loaded">{{ $t('GENERIC_TEXT_VALUE_WATCH') }}</Button>
                         </StackLayout>
@@ -45,51 +45,74 @@
             }
         },
         computed: {
+            /**
+             * return actors as string separated by comma
+             */
             actors() {
                 return this.content && this.content.actors.join(', ');
             }
         },
         methods: {
+            /**
+             * set active screen name value to store
+             */
             setDefaultFocus() {
                 this.$store.commit('SET_SCREEN', this.$options.name);
             },
+            /**
+             * page onload event
+             * hide action bar when page is loaded
+             * set IS_NAVIGATING to false when page is loaded
+             * @param {Object} event
+             */
             onLoaded(event) {
                 console.info('ON LOAD FINISHED - ContentDetail');
                 const page = event.object;
                 page.actionBarHidden = true;
 
+                this.$store.commit('SET_IS_NAVIGATING', false);
+            },
+            /**
+             * page on navigated to event
+             * if page is first opened then set default focus
+             * if page is loaded from hardware back key press do nothing
+             * @param {Object} event
+             */
+            onNavigatedTo(event) {
                 if (!event.isBackNavigation) {
                     this.setDefaultFocus();
                 }
-                this.$store.commit('SET_IS_NAVIGATING', false);
             },
+            /**
+             * for android, save loaded item into jsview to handle focus inside Activity class
+             * @param {Object} event
+             */
             loaded(event) {
                 if (this.$isAndroid) {
                     let view = event.object;
                     view.android['jsview'] = event.object;
                 }
             },
+            /**
+             * handle buy content button click
+             * @param {Object} event
+             */
             buyContent(event) {
                 console.log("buy");
             },
+            /**
+             * handle rent content button click
+             * @param {Object} event
+             */
             rentContent(event) {
                 console.log("rent");
             },
+            /**
+             * handle watch content button click
+             * @param {Object} event
+             */
             watchContent(event) {
-
-            },
-            isFocused(id) {
-                const screen = this.$store.getters.activeScreen;
-                if (screen && id && id.toLowerCase() === screen.toLowerCase() && this.$refs[id]) {
-                    const view = this.$refs[id].nativeView;
-                    view.addPseudoClass('focused');
-                    if (this.$isAndroid) {
-                        view.android.setFocusable(true);
-                        view.android.setFocusableInTouchMode(true);
-                        view.android.requestFocus();
-                        // view.android.nextFocusRight = `${id}_list`
-                    }
-                }
+                console.log("watch");
             }
         }
     }
@@ -107,10 +130,6 @@
         border-width: 1px;
         width: 220px;
         height: 100px;
-    }
-
-    Button:focused {
-        color: #950B02;
     }
 
     TextView {

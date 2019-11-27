@@ -31,6 +31,10 @@
             }
         },
         computed: {
+            /**
+             * compute and return play url of a content
+             * @returns {Object}
+             */
             playUrl() {
                 return {
                     typeSource: 5,
@@ -42,11 +46,20 @@
             }
         },
         methods: {
+            /**
+             * page onload event
+             * hide action bar when page is loaded
+             * set IS_NAVIGATING to false when page is loaded
+             * @param {Object} event
+             */
             onLoaded(event) {
                 console.info('ON LOAD FINISHED - Video');
                 const page = event.object;
                 page.actionBarHidden = true;
             },
+            /**
+             * on video playback error
+             */
             onPlaybackError() {
                 dialogs.alert('Playback Error');
             }
