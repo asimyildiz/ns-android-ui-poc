@@ -2,8 +2,8 @@
 digiturk (beIN Media Group) POC for Android TV using nativescript and vue
 
 ## Project initial steps
-Project uses beINFW package which needs to be published to local npm registry (verdaccio)
-Project uses nativescript-image-colors plugin which needs to be published to local npm registry (verdaccio) which is updated to work with Nativescript v6 from my repository
+- Project uses beINFW package which needs to be published to local npm registry (verdaccio)
+- Project uses nativescript-image-colors plugin which needs to be published to local npm registry (verdaccio) which is updated to work with Nativescript v6 from my repository
 ```
 npm config set registry http://localhost:4873
 ```
