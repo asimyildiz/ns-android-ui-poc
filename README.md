@@ -1,5 +1,5 @@
-# beIN TV UI
-digiturk (beIN Media Group) POC for Android TV using nativescript and vue
+# Android TV app using Nativescript
+POC for Android TV using nativescript and vue
 
 ## Project initial steps
 - Project uses beINFW package which needs to be published to local npm registry (verdaccio)
